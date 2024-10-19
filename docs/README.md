@@ -1,87 +1,93 @@
-# Building the docs locally
+Building the Documentation Locally
+When contributing to the documentation, it’s essential to build and preview it locally to ensure that your changes display correctly. This guide provides detailed steps on how to do that using Docker and Yarn.
 
-When you contribute to documentation, it's a good practice to build the docs on your local machine to make sure your changes appear as you expect. This README explains the process for doing that.
+Prerequisites
+Before getting started, make sure you have the following installed:
 
-To build a local version, you need to run a process in a Docker container.
-Grafana periodically updates the Docker image, [`docs-base`](https://hub.docker.com/r/grafana/docs-base), to update the styling of the Docs.
+Docker: Version >= 2.1.0.3
+Yarn: Version >= 1.22.4
+How to Build the Docs Locally
+Follow these steps to build the documentation and preview it in your browser:
 
-## Requirements
+1. Start Docker
+Ensure Docker is installed and running. You can check if Docker is active by running:
+bash
+Copy code
+docker info
+2. Switch to the Docs Directory
+Open your terminal and navigate to the docs folder:
+bash
+Copy code
+cd docs
+3. Build and Preview the Site
+Run the following command to build the docs and launch a local preview:
+bash
+Copy code
+make docs
+The site will be available at:
+http://localhost:3002/docs/grafana/latest/
+Any changes you make in the sources/ directory will automatically refresh the preview.
+4. Use Local Static Assets (Optional)
+If you have the grafana/website repo checked out in the same directory as the grafana repo, you can run:
+bash
+Copy code
+make docs-local-static
+This ensures that local assets like images are used instead of remote ones.
+Editing Content Guidelines
+Most content resides in the sources/ directory. Some pages, however, are auto-generated from TypeScript files. Please follow these instructions to edit content correctly.
 
-- Docker >= 2.1.0.3
-- Yarn >= 1.22.4
+Auto-Generated Content
+Markdown Location:
+docs/sources/panels-visualizations/query-transform-data/transform-data/index.md
 
-## Build the doc site
+TypeScript Source Files:
 
-First, make sure the Docker daemon is running on your machine. Then, follow these steps:
+scripts/docs/generate-transformations.ts – General content.
+public/app/features/transformers/docs/content.ts – Transformation-specific content.
+Note: Always use reference-style links in content.ts to prevent issues with the UI.
 
-1. On the command line, first change to the docs folder: `cd docs`.
-1. Run `make docs`. This launches a preview of the website with the current grafana docs at `http://localhost:3002/docs/grafana/latest/` which will refresh automatically when changes are made to content in the `sources` directory.
+Using Internal Links with relref
+When linking to other pages within the documentation, use Hugo’s relref shortcode to maintain consistency.
 
-If you have the grafana/website repo checked out in the same directory as the grafana repo, then you can run `make docs-local-static` to use local assets (such as images).
+Example:
 
----
-
-## Content guidelines
-
-Generally, one can edit content in the `sources` directory.
-
-The following paths are built instead from a typescript file and are auto-generated. Please do not edit these files directly.
-Instead, navigate to the appropriate typescript source file and edit the content there, then follow the build instructions to generate the markdown files.
-
-### Transformations
-
-Auto-generated markdown location:
-
-- docs/sources/panels-visualizations/query-transform-data/transform-data/index.md
-
-Typescript location for editing and instructions:
-
-- scripts/docs/generate-transformations.ts - Includes all content not specific to a transformation.
-- public/app/features/transformers/docs/content.ts - Transformation-specific content.
-
-Only use [reference style links](https://grafana.com/docs/writers-toolkit/write/shortcodes/#docsreference) in the `content.ts` file or else link text will be visible in the UI.
-
-### [Contributing](/contribute/documentation/README.md)
-
-### Using `relref` for internal links
-
-Use the Hugo shortcode [relref](https://gohugo.io/content-management/cross-references/#use-ref-and-relref) any time you are linking to other internal docs pages.
-
-Syntax is:
-
-```
+hugo
+Copy code
 {{< relref "example.md" >}}
-```
+If Hugo reports an ambiguous link, provide the full path (e.g., folder/example.md).
 
-You might need to add more context for the link (containing folders and so on, `folder/example.md`) if Hugo says the relref is ambiguous.
+Managing Redirects
+When moving or removing pages, add redirects to avoid broken links.
 
-### Managing redirects
+If moving a page: Add an aliases entry in the page’s front matter to redirect the old URL to the new one.
+If deleting a page: Add an aliases entry in the most relevant existing page.
+Tip: If copying a page to create a new one, remove old aliases from the copy to avoid conflicting redirects.
 
-When moving content around or removing pages it's important that users following old links are properly redirected to the new location. We do this using the [aliases](https://gohugo.io/content-management/urls/#aliases) feature in Hugo.
+Editing the Side Menu
+The side menu is generated from the file structure. Use the weight parameter in the front matter to control the order of pages.
 
-If you are moving a page, add an `aliases` entry in the front matter referencing the old location of the page which will redirect the old url to the new location.
+Change Menu Text: Use the menuTitle parameter if the menu text should differ from the page title.
+Adding Images
+Follow the guidelines for adding images, diagrams, and screenshots in the Image Guidelines.
 
-If you are removing a page, add an `aliases` entry in the front matter of the most-applicable page referencing the location of the page being removed.
+Deploying Changes to grafana.com
+When your pull request (PR) is merged, the changes in the docs/sources directory are automatically synced to the Grafana website via GitHub Actions.
 
-If you are copying an existing page as the basis for a new one, be sure to remove any `aliases` entries in the front matter in your copy to avoid conflicting redirects.
+PR to main branch:
 
-### Edit the side menu
+Changes sync to content/docs/grafana/next.
+Published at: https://grafana.com/docs/grafana/next/
+PR to the release branch:
 
-The side menu is automatically build from the file structure. Use the [weight](https://gohugo.io/templates/lists/#by-weight) front matter parameter to order pages.
+Changes sync to content/docs/grafana/latest.
+Published at: https://grafana.com/docs/grafana/latest/
+Once synced, the site will automatically update—no further action needed.
 
-To specify different menu text from the page title, use the front matter parameter `menuTitle`.
+Summary
+This README provides the necessary steps to build, edit, and deploy the documentation efficiently. It ensures that contributions are formatted correctly and aligned with Grafana’s standards. Follow these instructions to ensure smooth local builds and successful deployments.
 
-### Add images
-
-Please see our help documentation on [Image, diagram, and screenshot guidelines](https://grafana.com/docs/writers-toolkit/writing-guide/image-guidelines/) for comprehensive information.
-
----
-
-## Deploy changes to grafana.com
-
-When a PR is merged with changes in the `docs/sources` directory, those changes are automatically synced by a GitHub action (`.github/workflows/publish.yml`) to the grafana/website repo.
-
-- A PR that targets the `main` branch syncs to the `content/docs/grafana/next` directory in the `website` repository, and publishes to `https://grafana.com/docs/grafana/next/`.
-- A PR targeting the `latest/current` release branch syncs to the `content/docs/grafana/latest` directory in the `website` repository, and publishes to `https://grafana.com/docs/grafana/latest/`.
-
-Once the sync is complete, the website will automatically publish to production - no further action is needed.
+Key Highlights of Changes
+Clearer Instructions: Step-by-step build and preview process.
+Structured Content: Auto-generated content guidelines separated for clarity.
+Helpful Tips: Use of relref and aliases to manage links and redirects.
+Deployment Clarity: Explained GitHub Action sync process for PRs.
